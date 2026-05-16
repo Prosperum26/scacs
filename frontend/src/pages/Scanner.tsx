@@ -1,21 +1,32 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Card from '../components/Card'
 import Info from '../components/Info'
-import { users } from '../data/mockData'
+import { apiClient } from '../services/apiClient'
+import type { VerifyAccessResponse } from '../types/api'
 
 type ScanState = 'idle' | 'granted' | 'denied'
 
 function Scanner() {
   const [studentId, setStudentId] = useState('SV2026001')
   const [scanState, setScanState] = useState<ScanState>('idle')
+  const [scanResult, setScanResult] = useState<VerifyAccessResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const mockUser = useMemo(
-    () => users.find((user) => user.id.toLowerCase() === studentId.trim().toLowerCase()),
-    [studentId],
-  )
-
-  const runScan = () => {
-    setScanState(mockUser && mockUser.status === 'Active' ? 'granted' : 'denied')
+  const runScan = async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+      const result = await apiClient.verifyAccess(studentId)
+      setScanResult(result)
+      setScanState(result.result === 'GRANTED' ? 'granted' : 'denied')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify access')
+      setScanState('denied')
+      setScanResult(null)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -29,6 +40,8 @@ function Scanner() {
               onChange={(event) => {
                 setStudentId(event.target.value)
                 setScanState('idle')
+                setScanResult(null)
+                setError('')
               }}
               className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
               placeholder="Enter ID, e.g. SV2026001"
@@ -37,10 +50,12 @@ function Scanner() {
           <button
             type="button"
             onClick={runScan}
-            className="w-full rounded-lg bg-slate-950 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-slate-950 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-500"
           >
-            Scan QR
+            {isLoading ? 'Scanning...' : 'Scan QR'}
           </button>
+          {error && <p className="text-sm font-medium text-rose-700">{error}</p>}
           <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
             <div className="mx-auto grid size-36 place-items-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-500">
               QR MOCK
@@ -67,9 +82,9 @@ function Scanner() {
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Info label="Credential" value={studentId || 'No ID entered'} />
-          <Info label="Name" value={mockUser?.name ?? 'Unknown'} />
-          <Info label="Role" value={mockUser?.role ?? 'Not registered'} />
-          <Info label="Gate" value="Main Gate A" />
+          <Info label="Name" value={scanResult?.user?.name ?? 'Unknown'} />
+          <Info label="Role" value={scanResult?.user?.role ?? 'Not registered'} />
+          <Info label="Gate" value={scanResult?.log.gate ?? 'Main Gate A'} />
         </div>
       </div>
     </div>

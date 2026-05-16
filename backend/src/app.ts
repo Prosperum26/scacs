@@ -7,6 +7,7 @@ import express, { Express } from 'express';
 import { initializeCors } from './middleware/corsMiddleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import accessRoutes from './routes/accessRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 import healthRoutes from './routes/healthRoutes';
 import logRoutes from './routes/logRoutes';
 import userRoutes from './routes/userRoutes';
@@ -45,6 +46,7 @@ export const createApp = (): Express => {
   app.use('/users', userRoutes);
   app.use('/access', accessRoutes);
   app.use('/logs', logRoutes);
+  app.use('/dashboard', dashboardRoutes);
 
   // ============================================
   // ERROR HANDLING

@@ -30,6 +30,7 @@ const startServer = (): void => {
       logger.info('  DELETE http://localhost:' + config.port + '/users/:id');
       logger.info('  POST   http://localhost:' + config.port + '/access/verify');
       logger.info('  GET    http://localhost:' + config.port + '/logs');
+      logger.info('  GET    http://localhost:' + config.port + '/dashboard/stats');
     });
 
     process.on('SIGINT', () => {
