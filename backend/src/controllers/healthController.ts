@@ -10,11 +10,7 @@ import { Request, Response } from 'express';
  * Returns a simple status response to verify the API is running
  */
 export const getHealth = (_req: Request, res: Response): void => {
-  res.status(200).json({
-    message: 'SCACS API running',
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-  });
+  res.status(200).send('SCACS API running');
 };
 
 /**

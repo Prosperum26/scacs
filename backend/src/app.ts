@@ -6,7 +6,10 @@
 import express, { Express } from 'express';
 import { initializeCors } from './middleware/corsMiddleware';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import accessRoutes from './routes/accessRoutes';
 import healthRoutes from './routes/healthRoutes';
+import logRoutes from './routes/logRoutes';
+import userRoutes from './routes/userRoutes';
 import { logger } from './utils/logger';
 
 /**
@@ -38,15 +41,10 @@ export const createApp = (): Express => {
   // ROUTES SETUP
   // ============================================
 
-  // Health check routes
   app.use('/', healthRoutes);
-
-  // TODO: Add more routes here as you develop the application
-  // Example:
-  // app.use('/api/auth', authRoutes);
-  // app.use('/api/access', accessRoutes);
-  // app.use('/api/users', userRoutes);
-  // app.use('/api/reports', reportRoutes);
+  app.use('/users', userRoutes);
+  app.use('/access', accessRoutes);
+  app.use('/logs', logRoutes);
 
   // ============================================
   // ERROR HANDLING
