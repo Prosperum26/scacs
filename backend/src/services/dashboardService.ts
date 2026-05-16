@@ -12,9 +12,8 @@ const isToday = (timestamp: string): boolean => {
   );
 };
 
-export const getDashboardStats = () => {
-  const users = getUsers();
-  const logs = getAccessLogs();
+export const getDashboardStats = async () => {
+  const [users, logs] = await Promise.all([getUsers(), getAccessLogs()]);
   const todaysLogs = logs.filter((log) => isToday(log.timestamp));
 
   return {

@@ -1,3 +1,6 @@
+import { supabase } from '../config/database';
+import type { Database } from '../config/database';
+
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 
 export interface User {
@@ -18,70 +21,80 @@ export interface CreateUserInput {
 
 export type UpdateUserInput = Partial<Omit<User, 'id'>>;
 
-const users: User[] = [
-  {
-    id: 'SV2026001',
-    name: 'Linh Tran',
-    role: 'student',
-    department: 'Computer Science',
-    status: 'active',
-  },
-  {
-    id: 'SV2026042',
-    name: 'Minh Nguyen',
-    role: 'student',
-    department: 'Business',
-    status: 'active',
-  },
-  {
-    id: 'FC1108',
-    name: 'Dr. An Pham',
-    role: 'faculty',
-    department: 'Engineering',
-    status: 'active',
-  },
-  {
-    id: 'ST3302',
-    name: 'Bao Le',
-    role: 'staff',
-    department: 'Library',
-    status: 'suspended',
-  },
-];
+type UserRow = Database['public']['Tables']['users']['Row'];
 
-export const getUsers = (): User[] => users;
+const mapUser = (row: UserRow): User => ({
+  id: row.id,
+  name: row.name,
+  role: row.role,
+  department: row.department,
+  status: row.status,
+});
 
-export const getUserById = (id: string): User | undefined =>
-  users.find((user) => user.id.toLowerCase() === id.toLowerCase());
+export const getUsers = async (): Promise<User[]> => {
+  const { data, error } = await supabase.from('users').select('*').order('name', { ascending: true });
 
-export const createUser = (input: CreateUserInput): User => {
-  const user: User = {
-    ...input,
-    status: input.status ?? 'active',
-  };
-
-  users.push(user);
-  return user;
-};
-
-export const updateUser = (id: string, input: UpdateUserInput): User | null => {
-  const user = getUserById(id);
-
-  if (!user) {
-    return null;
+  if (error) {
+    throw error;
   }
 
-  Object.assign(user, input);
-  return user;
+  return (data ?? []).map(mapUser);
 };
 
-export const deleteUser = (id: string): boolean => {
-  const index = users.findIndex((user) => user.id.toLowerCase() === id.toLowerCase());
+export const getUserById = async (id: string): Promise<User | null> => {
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
 
-  if (index === -1) {
+  if (error) {
+    throw error;
+  }
+
+  return data ? mapUser(data) : null;
+};
+
+export const createUser = async (input: CreateUserInput): Promise<User> => {
+  const { data, error } = await supabase
+    .from('users')
+    .insert({
+      ...input,
+      status: input.status ?? 'active',
+    })
+    .select('*')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapUser(data);
+};
+
+export const updateUser = async (id: string, input: UpdateUserInput): Promise<User | null> => {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ ...input, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? mapUser(data) : null;
+};
+
+export const deleteUser = async (id: string): Promise<boolean> => {
+  const user = await getUserById(id);
+
+  if (!user) {
     return false;
   }
 
-  users.splice(index, 1);
+  const { error } = await supabase.from('users').delete().eq('id', id);
+
+  if (error) {
+    throw error;
+  }
+
   return true;
 };

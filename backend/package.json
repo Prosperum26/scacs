@@ -20,6 +20,8 @@
   "author": "SCACS Team",
   "license": "MIT",
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"

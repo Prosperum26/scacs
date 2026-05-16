@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { verifyAccess } from '../services/accessService';
 
 interface VerifyAccessBody {
@@ -6,21 +6,29 @@ interface VerifyAccessBody {
   gate?: string;
 }
 
-export const verifyUserAccess = (req: Request<object, object, VerifyAccessBody>, res: Response): void => {
-  const { studentId, gate } = req.body;
+export const verifyUserAccess = async (
+  req: Request<object, object, VerifyAccessBody>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { studentId, gate } = req.body;
 
-  if (!studentId) {
-    res.status(400).json({
-      success: false,
-      message: 'studentId is required',
+    if (!studentId) {
+      res.status(400).json({
+        success: false,
+        message: 'studentId is required',
+      });
+      return;
+    }
+
+    const result = await verifyAccess({ studentId, gate });
+
+    res.status(200).json({
+      success: true,
+      data: result,
     });
-    return;
+  } catch (error) {
+    next(error);
   }
-
-  const result = verifyAccess({ studentId, gate });
-
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
 };

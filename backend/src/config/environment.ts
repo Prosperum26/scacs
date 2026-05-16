@@ -15,6 +15,7 @@ interface EnvironmentConfig {
     url: string;
     supabaseUrl: string;
     supabaseKey: string;
+    supabaseServiceRoleKey: string;
   };
   auth: {
     jwtSecret: string;
@@ -40,6 +41,7 @@ export const getEnvironmentConfig = (): EnvironmentConfig => {
       url: process.env.DATABASE_URL || '',
       supabaseUrl: process.env.SUPABASE_URL || '',
       supabaseKey: process.env.SUPABASE_KEY || '',
+      supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     },
     auth: {
       jwtSecret: process.env.JWT_SECRET || 'your-secret-key',

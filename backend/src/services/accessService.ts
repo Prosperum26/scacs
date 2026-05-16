@@ -14,12 +14,12 @@ export interface VerifyAccessResult {
   log: AccessLog;
 }
 
-export const verifyAccess = ({ studentId, gate }: VerifyAccessInput): VerifyAccessResult => {
-  const user = getUserById(studentId);
+export const verifyAccess = async ({ studentId, gate }: VerifyAccessInput): Promise<VerifyAccessResult> => {
+  const user = await getUserById(studentId);
   const isGranted = Boolean(user && user.status === 'active');
   const result: AccessResult = isGranted ? 'GRANTED' : 'DENIED';
 
-  const log = createAccessLog({
+  const log = await createAccessLog({
     userId: studentId,
     userName: user?.name ?? 'Unknown',
     gate,
@@ -28,7 +28,7 @@ export const verifyAccess = ({ studentId, gate }: VerifyAccessInput): VerifyAcce
 
   return {
     result,
-    user: user ?? null,
+    user,
     log,
   };
 };
