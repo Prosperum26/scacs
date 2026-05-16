@@ -12,7 +12,7 @@ type MainLayoutProps = {
 
 function MainLayout({ activePage, children, onNavigate }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#eef2f7] text-slate-900">
+    <div className="min-h-screen bg-[#edf2f7] text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
         <main className="min-w-0 flex-1">

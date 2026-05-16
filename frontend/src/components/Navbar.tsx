@@ -19,8 +19,11 @@ function Navbar({ activePage, onNavigate }: NavbarProps) {
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-medium text-cyan-800">
+            Demo Mode
+          </div>
           <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
-            <span className="size-2 rounded-full bg-emerald-500"></span>
+            <span className="size-2 animate-pulse rounded-full bg-emerald-500"></span>
             System Online
           </div>
           <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm">

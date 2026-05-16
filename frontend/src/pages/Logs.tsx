@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Card from '../components/Card'
+import Skeleton from '../components/Skeleton'
 import StatusBadge from '../components/StatusBadge'
 import Table from '../components/Table'
 import { apiClient } from '../services/apiClient'
@@ -51,7 +52,11 @@ function Logs() {
       </div>
       {error && <p className="mb-4 text-sm font-medium text-rose-700">{error}</p>}
       {isLoading ? (
-        <p className="text-sm text-slate-500">Loading access logs...</p>
+        <div className="space-y-3">
+          {[0, 1, 2, 3, 4].map((item) => (
+            <Skeleton key={item} className="h-14" />
+          ))}
+        </div>
       ) : (
         <Table
           headers={['Time', 'User', 'Gate', 'Method', 'Result']}
