@@ -14,7 +14,11 @@ const startServer = async (): Promise<void> => {
     const server = http.createServer(app);
 
     const io = new SocketServer(server, {
-      cors: { origin: config.cors.origin, methods: ['GET', 'POST'] },
+      cors: {
+        origin: config.cors.origins,
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
     });
 
     io.on('connection', (socket) => {

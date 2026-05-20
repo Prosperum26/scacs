@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
+import { parseCorsOrigins } from './corsOrigins';
 
 dotenv.config();
+
+const corsOriginRaw = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
 
 export const config = {
   port: parseInt(process.env.PORT ?? '3000', 10),
@@ -14,7 +17,8 @@ export const config = {
     expirySec: parseInt(process.env.QR_TOKEN_EXPIRY_SEC ?? '60', 10),
   },
   cors: {
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+    origins: parseCorsOrigins(corsOriginRaw),
+    origin: corsOriginRaw,
   },
   defaultGate: process.env.DEFAULT_GATE ?? 'Main Gate',
 };

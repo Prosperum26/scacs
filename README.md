@@ -86,6 +86,12 @@ Open **http://localhost:5173**
 
 Real-time: Socket.IO events `scan:result`, `logs:updated`, `alerts:new`
 
+## Production deploy (Render + Vercel + Atlas)
+
+Chi tiết từng bước (tạo DB, biến môi trường, seed, CORS, xử lý lỗi):
+
+**[DEPLOY.md](./DEPLOY.md)**
+
 ## MongoDB plugin (Cursor)
 
 Configure the MongoDB MCP server in Cursor Settings with `MDB_MCP_CONNECTION_STRING` (same URI as `MONGODB_URI`) to let the agent inspect collections and help with queries.
