@@ -8,16 +8,34 @@ import type { ScanResult } from '../../types/api'
 
 const GATES = ['Main Gate', 'Library', 'Dormitory', 'Parking Area', 'Laboratory Building']
 
+/** Laptop webcams: user-facing camera, higher resolution, larger scan region. */
+function scannerConfig(windowWidth: number) {
+  const qrBox = Math.min(Math.max(Math.floor(windowWidth * 0.75), 240), 420)
+  return {
+    qrBox,
+    fps: 15,
+    aspectRatio: 1,
+    disableFlip: false,
+    videoConstraints: {
+      facingMode: 'user',
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 480 },
+    },
+  }
+}
+
 export default function Scanner() {
   const { token } = useAuth()
   const windowWidth = useWindowWidth()
-  const qrBox = Math.min(Math.max(windowWidth - 48, 200), 280)
+  const { qrBox, fps, aspectRatio, disableFlip, videoConstraints } = scannerConfig(windowWidth)
   const { lastScan, scanVersion } = useSocket()
   const [gate, setGate] = useState(GATES[0])
   const [result, setResult] = useState<ScanResult | null>(null)
   const [recent, setRecent] = useState<ScanResult[]>([])
   const [cameraOn, setCameraOn] = useState(false)
+  const [cameraError, setCameraError] = useState('')
   const [shake, setShake] = useState(false)
+  const [manualCode, setManualCode] = useState('')
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const processing = useRef(false)
 
@@ -43,9 +61,11 @@ export default function Scanner() {
   const handleScan = useCallback(
     async (qrToken: string) => {
       if (!token || processing.current) return
+      const payload = qrToken.trim()
+      if (!payload) return
       processing.current = true
       try {
-        const res = await api.verifyQr(token, qrToken, gate)
+        const res = await api.verifyQr(token, payload, gate)
         setResult(res)
         if (res.status === 'DENIED') {
           setShake(true)
@@ -57,33 +77,63 @@ export default function Scanner() {
       } finally {
         setTimeout(() => {
           processing.current = false
-        }, 2000)
+        }, 1500)
       }
     },
     [token, gate, loadLogs],
   )
 
+  const submitManual = () => {
+    if (!manualCode.trim()) return
+    handleScan(manualCode.startsWith('SC:') ? manualCode : `SC:${manualCode.replace(/^SC:/i, '')}`)
+  }
+
   useEffect(() => {
     if (!cameraOn) return
 
     const id = 'qr-reader'
-    const scanner = new Html5Qrcode(id)
+    const scanner = new Html5Qrcode(id, { verbose: false })
     scannerRef.current = scanner
+    setCameraError('')
 
-    scanner
-      .start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: qrBox, height: qrBox } },
-        (decoded) => handleScan(decoded),
-        () => {},
-      )
-      .catch(() => setCameraOn(false))
+    const startWithCamera = async () => {
+      try {
+        const cameras = await Html5Qrcode.getCameras()
+        const laptopCam =
+          cameras.find((c) => /facetime|integrated|built.?in|webcam|user/i.test(c.label)) ??
+          cameras[0]
+
+        const cameraIdOrConfig = laptopCam?.id ?? { facingMode: 'user' as const }
+
+        await scanner.start(
+          cameraIdOrConfig,
+          {
+            fps,
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const size = Math.min(qrBox, viewfinderWidth * 0.92, viewfinderHeight * 0.85)
+              return { width: size, height: size }
+            },
+            aspectRatio,
+            disableFlip,
+            videoConstraints,
+          },
+          (decoded) => handleScan(decoded),
+          () => {},
+        )
+      } catch (err) {
+        console.error(err)
+        setCameraError('Could not start camera. Allow permission or try manual code below.')
+        setCameraOn(false)
+      }
+    }
+
+    startWithCamera()
 
     return () => {
       scanner.stop().catch(() => {})
       scannerRef.current = null
     }
-  }, [cameraOn, handleScan, qrBox])
+  }, [cameraOn, handleScan, qrBox, fps, aspectRatio, disableFlip, videoConstraints])
 
   const granted = result?.status === 'GRANTED'
 
@@ -92,7 +142,9 @@ export default function Scanner() {
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg font-bold text-white sm:text-xl">Live QR Scanner</h1>
-          <p className="text-xs text-slate-500">Real-time campus access verification</p>
+          <p className="text-xs text-slate-500">
+            Optimized for laptop webcam · scan student phone at 25–40cm, good lighting
+          </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <select
@@ -114,21 +166,34 @@ export default function Scanner() {
         </div>
       </div>
 
+      {cameraError && (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-950/40 px-4 py-2 text-sm text-amber-200">
+          {cameraError}
+        </p>
+      )}
+
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="relative overflow-hidden rounded-lg border border-slate-800 bg-black">
-          {cameraOn && <div id="qr-reader" className="min-h-[320px] w-full" />}
+        <div className="scanner-panel relative overflow-hidden rounded-lg border border-slate-800 bg-black">
+          {cameraOn && <div id="qr-reader" className="min-h-[360px] w-full sm:min-h-[420px]" />}
           {!cameraOn && (
-            <div className="grid min-h-[320px] place-items-center text-slate-600">
-              <p>Camera off — click Start camera</p>
+            <div className="grid min-h-[360px] place-items-center px-4 text-center text-slate-500 sm:min-h-[420px]">
+              <p>
+                Start camera, then ask the student to open <strong className="text-slate-300">Scan mode (fullscreen)</strong>{' '}
+                on their phone.
+              </p>
             </div>
           )}
           {cameraOn && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div
-                className="border-2 border-emerald-400/60"
-                style={{ width: qrBox, height: qrBox, maxWidth: '90%', maxHeight: '90%' }}
+                className="rounded-lg border-2 border-dashed border-emerald-400/70 shadow-[0_0_24px_rgba(52,211,153,0.25)]"
+                style={{
+                  width: Math.min(qrBox, 360),
+                  height: Math.min(qrBox, 360),
+                  maxWidth: '92%',
+                  maxHeight: '85%',
+                }}
               />
-              <div className="absolute left-0 right-0 h-0.5 animate-pulse bg-emerald-400/80" style={{ animation: 'scan-line 2s linear infinite' }} />
             </div>
           )}
           <span className="absolute right-3 top-3 flex items-center gap-1 text-xs text-emerald-400">
@@ -160,11 +225,33 @@ export default function Scanner() {
               <div>
                 <p className="font-bold text-white">{result.studentName}</p>
                 <p className="text-sm text-slate-400">{result.studentId}</p>
-                <p className="text-xs text-slate-500">{new Date(result.timestamp).toLocaleString()} · {result.gate}</p>
+                <p className="text-xs text-slate-500">
+                  {new Date(result.timestamp).toLocaleString()} · {result.gate}
+                </p>
                 {!granted && result.reason && <p className="mt-1 text-sm text-rose-400">{result.reason}</p>}
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+        <h3 className="text-sm font-semibold text-slate-300">Manual code (backup)</h3>
+        <p className="mt-1 text-xs text-slate-500">If the camera fails, paste the short code from the student app (under QR).</p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            placeholder="SC:abc123def456 or 12-char code"
+            className="tap-target flex-1 rounded border border-slate-700 bg-slate-950 px-3 py-3 font-mono text-sm"
+          />
+          <button
+            type="button"
+            onClick={submitManual}
+            className="tap-target rounded bg-slate-700 px-4 py-3 text-sm font-semibold hover:bg-slate-600"
+          >
+            Verify code
+          </button>
         </div>
       </div>
 

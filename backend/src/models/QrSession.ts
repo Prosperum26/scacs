@@ -3,6 +3,8 @@ import mongoose, { Schema, type Document, type Model } from 'mongoose';
 export interface IQrSession {
   userId: mongoose.Types.ObjectId;
   jti: string;
+  /** Short code embedded in QR (SC:xxxxxxxxxxxx) */
+  publicCode: string;
   expiresAt: Date;
   usedAt?: Date;
   invalidated: boolean;
@@ -16,6 +18,7 @@ const qrSessionSchema = new Schema<IQrSessionDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     jti: { type: String, required: true, unique: true },
+    publicCode: { type: String, required: true, unique: true, lowercase: true, trim: true },
     expiresAt: { type: Date, required: true, index: true },
     usedAt: { type: Date },
     invalidated: { type: Boolean, default: false },
