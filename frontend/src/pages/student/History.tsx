@@ -36,28 +36,63 @@ export default function History() {
 
   return (
     <div className="animate-slide-up space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-bold">Access History</h1>
-        <button type="button" onClick={exportCsv} className="rounded-lg border border-cyan-500/40 px-4 py-2 text-sm text-cyan-300 hover:bg-cyan-500/10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <h1 className="text-xl font-bold sm:text-2xl">Access History</h1>
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="tap-target w-full rounded-lg border border-cyan-500/40 px-4 py-3 text-sm text-cyan-300 hover:bg-cyan-500/10 sm:w-auto sm:py-2"
+        >
           Export CSV
         </button>
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
         <input
           placeholder="Search gate..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
+          className="tap-target w-full rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-base sm:max-w-xs sm:py-2 sm:text-sm"
         />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="tap-target w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-3 text-base sm:w-auto sm:max-w-[10rem] sm:py-2 sm:text-sm"
+        >
           <option value="">All status</option>
           <option value="Granted">Granted</option>
           <option value="Denied">Denied</option>
         </select>
-        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm" />
+        <input
+          type="date"
+          value={from}
+          onChange={(e) => setFrom(e.target.value)}
+          className="tap-target w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-3 text-base sm:w-auto sm:py-2 sm:text-sm"
+        />
       </div>
-      <div className="overflow-x-auto rounded-xl border border-white/10">
-        <table className="w-full text-left text-sm">
+
+      {/* Mobile: stacked cards */}
+      <ul className="space-y-3 md:hidden">
+        {filtered.map((row) => (
+          <li key={row.id} className="glass rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-slate-500">{new Date(row.time).toLocaleString()}</p>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  row.status === 'Granted' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                }`}
+              >
+                {row.status}
+              </span>
+            </div>
+            <p className="mt-2 font-semibold text-white">{row.gate}</p>
+            <p className="mt-1 text-xs text-slate-400">Method: {row.method}</p>
+          </li>
+        ))}
+      </ul>
+
+      {/* Tablet+ : table */}
+      <div className="hidden overflow-x-auto rounded-xl border border-white/10 md:block">
+        <table className="w-full min-w-[32rem] text-left text-sm">
           <thead className="bg-white/5 text-slate-400">
             <tr>
               <th className="p-3">Time</th>
@@ -69,7 +104,7 @@ export default function History() {
           <tbody>
             {filtered.map((row) => (
               <tr key={row.id} className="border-t border-white/5">
-                <td className="p-3">{new Date(row.time).toLocaleString()}</td>
+                <td className="p-3 whitespace-nowrap">{new Date(row.time).toLocaleString()}</td>
                 <td className="p-3">{row.gate}</td>
                 <td className={`p-3 font-semibold ${row.status === 'Granted' ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {row.status}

@@ -28,34 +28,40 @@ export default function StudentLogin() {
   }
 
   return (
-    <div className="student-bg flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={submit} className="glass animate-slide-up w-full max-w-md rounded-2xl p-8">
+    <div className="student-bg flex min-h-[100dvh] items-center justify-center overflow-y-auto p-4 py-8">
+      <form
+        onSubmit={submit}
+        className="glass animate-slide-up w-full max-w-md rounded-2xl p-6 shadow-2xl sm:p-8"
+      >
         <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">SCACS</p>
-        <h1 className="mt-2 text-2xl font-bold text-white">Student Login</h1>
+        <h1 className="mt-2 text-xl font-bold text-white sm:text-2xl">Student Login</h1>
         <div className="mt-6 space-y-4">
           <label className="block">
             <span className="text-xs text-slate-300">Email</span>
             <input
               type="email"
+              inputMode="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="sv2026001@student.scacs.edu"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-cyan-400"
+              className="tap-target mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none focus:border-cyan-400"
             />
           </label>
           <label className="block">
             <span className="text-xs text-slate-300">Password</span>
             <input
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-cyan-400"
+              className="tap-target mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none focus:border-cyan-400"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-400">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-sm text-slate-400">
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-5" />
             Remember me
           </label>
         </div>
@@ -63,7 +69,7 @@ export default function StudentLogin() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-lg bg-cyan-500 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+          className="tap-target mt-6 w-full rounded-lg bg-cyan-500 py-3.5 text-base font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>

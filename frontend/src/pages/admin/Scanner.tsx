@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
+import { useWindowWidth } from '../../hooks/useWindowWidth'
 import { api } from '../../services/api'
 import type { ScanResult } from '../../types/api'
 
@@ -9,6 +10,8 @@ const GATES = ['Main Gate', 'Library', 'Dormitory', 'Parking Area', 'Laboratory 
 
 export default function Scanner() {
   const { token } = useAuth()
+  const windowWidth = useWindowWidth()
+  const qrBox = Math.min(Math.max(windowWidth - 48, 200), 280)
   const { lastScan, scanVersion } = useSocket()
   const [gate, setGate] = useState(GATES[0])
   const [result, setResult] = useState<ScanResult | null>(null)
@@ -70,7 +73,7 @@ export default function Scanner() {
     scanner
       .start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 280, height: 280 } },
+        { fps: 10, qrbox: { width: qrBox, height: qrBox } },
         (decoded) => handleScan(decoded),
         () => {},
       )
@@ -80,33 +83,35 @@ export default function Scanner() {
       scanner.stop().catch(() => {})
       scannerRef.current = null
     }
-  }, [cameraOn, handleScan])
+  }, [cameraOn, handleScan, qrBox])
 
   const granted = result?.status === 'GRANTED'
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Live QR Scanner</h1>
+          <h1 className="text-lg font-bold text-white sm:text-xl">Live QR Scanner</h1>
           <p className="text-xs text-slate-500">Real-time campus access verification</p>
         </div>
-        <select
-          value={gate}
-          onChange={(e) => setGate(e.target.value)}
-          className="rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm"
-        >
-          {GATES.map((g) => (
-            <option key={g}>{g}</option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={() => setCameraOn(!cameraOn)}
-          className={`rounded px-4 py-2 text-sm font-semibold ${cameraOn ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}
-        >
-          {cameraOn ? 'Stop camera' : 'Start camera'}
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <select
+            value={gate}
+            onChange={(e) => setGate(e.target.value)}
+            className="tap-target w-full rounded border border-slate-800 bg-slate-900 px-3 py-3 text-base sm:w-auto sm:py-2 sm:text-sm"
+          >
+            {GATES.map((g) => (
+              <option key={g}>{g}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setCameraOn(!cameraOn)}
+            className={`tap-target w-full rounded px-4 py-3 text-sm font-semibold sm:w-auto sm:py-2 ${cameraOn ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}
+          >
+            {cameraOn ? 'Stop camera' : 'Start camera'}
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -119,7 +124,10 @@ export default function Scanner() {
           )}
           {cameraOn && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="size-64 border-2 border-emerald-400/60" />
+              <div
+                className="border-2 border-emerald-400/60"
+                style={{ width: qrBox, height: qrBox, maxWidth: '90%', maxHeight: '90%' }}
+              />
               <div className="absolute left-0 right-0 h-0.5 animate-pulse bg-emerald-400/80" style={{ animation: 'scan-line 2s linear infinite' }} />
             </div>
           )}
@@ -139,7 +147,9 @@ export default function Scanner() {
           }`}
         >
           <p className="text-xs uppercase tracking-widest text-slate-500">Scan result</p>
-          <h2 className={`mt-2 text-3xl font-black ${granted ? 'text-emerald-400' : result ? 'text-rose-500' : 'text-slate-600'}`}>
+          <h2
+            className={`mt-2 text-2xl font-black sm:text-3xl ${granted ? 'text-emerald-400' : result ? 'text-rose-500' : 'text-slate-600'}`}
+          >
             {result ? (granted ? 'ACCESS GRANTED ✅' : 'ACCESS DENIED ❌') : 'AWAITING SCAN'}
           </h2>
           {result && (

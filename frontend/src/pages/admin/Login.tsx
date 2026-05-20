@@ -27,33 +27,39 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="admin-bg flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded border border-emerald-500/20 bg-slate-950/90 p-8 shadow-2xl shadow-emerald-500/5">
+    <div className="admin-bg flex min-h-[100dvh] items-center justify-center overflow-y-auto p-4 py-8">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md rounded border border-emerald-500/20 bg-slate-950/90 p-6 shadow-2xl shadow-emerald-500/5 sm:p-8"
+      >
         <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-500">Security Portal</p>
-        <h1 className="mt-2 text-xl font-bold text-white">Admin / Security Login</h1>
+        <h1 className="mt-2 text-lg font-bold text-white sm:text-xl">Admin / Security Login</h1>
         <div className="mt-6 space-y-4">
           <input
             type="email"
+            inputMode="email"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="admin@scacs.edu"
-            className="w-full rounded border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500"
+            className="tap-target w-full rounded border border-slate-800 bg-slate-900 px-4 py-3 text-base text-white outline-none focus:border-emerald-500"
           />
           <input
             type="password"
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full rounded border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500"
+            className="tap-target w-full rounded border border-slate-800 bg-slate-900 px-4 py-3 text-base text-white outline-none focus:border-emerald-500"
           />
         </div>
         {error && <p className="mt-3 text-sm text-rose-500">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
+          className="tap-target mt-6 w-full rounded bg-emerald-600 py-3.5 text-base font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
         >
           {loading ? 'Authenticating...' : 'Enter control center'}
         </button>

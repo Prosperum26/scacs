@@ -52,10 +52,13 @@ export default function Register() {
   }
 
   return (
-    <div className="student-bg flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={submit} className="glass animate-slide-up w-full max-w-md rounded-2xl p-8 shadow-2xl">
+    <div className="student-bg flex min-h-[100dvh] items-center justify-center overflow-y-auto p-4 py-8">
+      <form
+        onSubmit={submit}
+        className="glass animate-slide-up w-full max-w-md rounded-2xl p-6 shadow-2xl sm:p-8"
+      >
         <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">SCACS</p>
-        <h1 className="mt-2 text-2xl font-bold text-white">Student Registration</h1>
+        <h1 className="mt-2 text-xl font-bold text-white sm:text-2xl">Student Registration</h1>
         <p className="mt-1 text-sm text-slate-400">Create your smart campus ID account</p>
         <div className="mt-6 space-y-4">
           {fields.map(({ key, label, type }) => (
@@ -66,7 +69,7 @@ export default function Register() {
                 required
                 value={form[key]}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-cyan-400"
+                className="tap-target mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none focus:border-cyan-400"
               />
             </label>
           ))}
@@ -75,7 +78,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className="tap-target mt-6 w-full rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 py-3.5 text-base font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           {loading ? 'Creating account...' : 'Register'}
         </button>

@@ -11,6 +11,8 @@ Full-stack QR-based campus access control for universities. Students carry a **r
 | Database | **MongoDB** (Mongoose) |
 | Auth | JWT (login) + short-lived signed QR tokens (60s, one-time use) |
 
+The student portal is **mobile-first**: bottom tab navigation, responsive QR size, safe-area insets for notched phones, and touch-friendly controls (44px+ targets).
+
 ## Quick start
 
 ### 1. MongoDB
