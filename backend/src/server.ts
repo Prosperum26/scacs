@@ -1,47 +1,46 @@
-/**
- * Server Startup
- * This file starts the Express server and handles graceful shutdown
- */
-
+import http from 'http';
+import { Server as SocketServer } from 'socket.io';
 import { createApp } from './app';
+import { connectDatabase } from './config/database';
 import { config } from './config/environment';
+import { setSocketServer } from './services/accessService';
 import { logger } from './utils/logger';
 
-/**
- * Start the server
- */
-const startServer = (): void => {
+const startServer = async (): Promise<void> => {
   try {
+    await connectDatabase();
+
     const app = createApp();
+    const server = http.createServer(app);
 
-    app.listen(config.port, () => {
-      logger.success('SCACS Backend Server Started', {
-        port: config.port,
-        environment: config.nodeEnv,
-        url: `http://localhost:${config.port}`,
+    const io = new SocketServer(server, {
+      cors: { origin: config.cors.origin, methods: ['GET', 'POST'] },
+    });
+
+    io.on('connection', (socket) => {
+      logger.info('Socket connected', { id: socket.id });
+      socket.on('scanner:join', (gate: string) => {
+        socket.join(`gate:${gate}`);
+        socket.emit('scanner:ready', { gate });
       });
-
-      logger.info('Available endpoints:');
-      logger.info('  GET    http://localhost:' + config.port);
-      logger.info('  GET    http://localhost:' + config.port + '/status');
-      logger.info('  GET    http://localhost:' + config.port + '/users');
-      logger.info('  POST   http://localhost:' + config.port + '/users');
-      logger.info('  PUT    http://localhost:' + config.port + '/users/:id');
-      logger.info('  DELETE http://localhost:' + config.port + '/users/:id');
-      logger.info('  POST   http://localhost:' + config.port + '/access/verify');
-      logger.info('  GET    http://localhost:' + config.port + '/logs');
-      logger.info('  GET    http://localhost:' + config.port + '/dashboard/stats');
     });
 
-    process.on('SIGINT', () => {
-      logger.warning('Received SIGINT, shutting down gracefully...');
-      process.exit(0);
+    setSocketServer(io);
+
+    server.listen(config.port, () => {
+      logger.success('SCACS Backend started', {
+        port: config.port,
+        url: `http://localhost:${config.port}`,
+        cors: config.cors.origin,
+      });
     });
 
-    process.on('SIGTERM', () => {
-      logger.warning('Received SIGTERM, shutting down gracefully...');
-      process.exit(0);
-    });
+    const shutdown = () => {
+      logger.warning('Shutting down...');
+      server.close(() => process.exit(0));
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
   } catch (error) {
     logger.error('Failed to start server', error);
     process.exit(1);

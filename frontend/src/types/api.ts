@@ -1,54 +1,74 @@
-export type UserStatus = 'active' | 'inactive' | 'suspended'
-export type UserRole = 'student' | 'faculty' | 'staff'
-export type AccessResult = 'GRANTED' | 'DENIED'
-
-export type ApiResponse<T> = {
-  success: boolean
-  data: T
-  message?: string
-}
-
-export type User = {
+export interface User {
   id: string
-  name: string
-  role: UserRole
+  email: string
+  fullName: string
+  studentId: string
   department: string
-  status: UserStatus
+  role: 'student' | 'admin'
+  status: 'active' | 'inactive' | 'suspended'
+  avatarUrl: string
+  accessLevel: string
 }
 
-export type AccessLog = {
+export interface QrData {
+  qrToken: string
+  expiresAt: string
+  expiresInSec: number
+  sessionId: string
+  user: User
+}
+
+export interface StudentDashboard {
+  totalCheckIns: number
+  lastAccessTime: string | null
+  activeQrStatus: string
+  campusAccessLevel: string
+  user: User
+}
+
+export interface ScanResult {
   id: string
-  userId: string
-  userName: string
+  status: 'GRANTED' | 'DENIED'
+  reason?: string
+  studentId: string
+  studentName: string
   gate: string
-  result: AccessResult
   timestamp: string
+  user: {
+    id: string
+    fullName: string
+    studentId: string
+    department: string
+    avatarUrl: string
+  } | null
 }
 
-export type DashboardStats = {
-  stats: Array<{
-    label: string
-    value: string
-    change: string
-    tone: string
-  }>
-  hourlyTraffic: number[]
-  gateHealth: Array<{
-    gate: string
-    value: number
-  }>
-}
-
-export type VerifyAccessResponse = {
-  result: AccessResult
-  user: User | null
-  log: AccessLog
-}
-
-export type CreateUserPayload = {
+export interface AccessHistoryItem {
   id: string
-  name: string
-  role: UserRole
-  department: string
-  status: UserStatus
+  time: string
+  gate: string
+  status: string
+  method: string
+  reason?: string
+}
+
+export interface Alert {
+  id: string
+  type: string
+  severity: 'low' | 'medium' | 'high'
+  title: string
+  message: string
+  studentId?: string
+  gate?: string
+  resolved: boolean
+  createdAt: string
+}
+
+export interface Analytics {
+  dailyCheckIns: number
+  deniedToday: number
+  activeStudents: number
+  hourlyStats: { hour: string; granted: number; denied: number; total: number }[]
+  gateTraffic: { gate: string; count: number }[]
+  dailyTrend: { date: string; count: number }[]
 }

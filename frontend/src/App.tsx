@@ -1,66 +1,89 @@
-import { useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
-import ToastContainer from './components/ToastContainer'
-import { DemoProvider } from './context/DemoProvider'
-import { useDemo } from './context/demoContext'
-import { navItems } from './data/mockData'
-import MainLayout from './layout/MainLayout'
-import Dashboard from './pages/Dashboard'
-import Login from './pages/Login'
-import Logs from './pages/Logs'
-import Reports from './pages/Reports'
-import Scanner from './pages/Scanner'
-import Users from './pages/Users'
-import type { Page } from './types/navigation'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { SocketProvider } from './context/SocketContext'
+import StudentLayout from './layouts/StudentLayout'
+import AdminLayout from './layouts/AdminLayout'
+import Home from './pages/Home'
+import StudentLogin from './pages/student/Login'
+import Register from './pages/student/Register'
+import StudentDashboard from './pages/student/Dashboard'
+import MyQr from './pages/student/MyQr'
+import History from './pages/student/History'
+import Profile from './pages/student/Profile'
+import AdminLogin from './pages/admin/Login'
+import Scanner from './pages/admin/Scanner'
+import AdminLogs from './pages/admin/Logs'
+import Students from './pages/admin/Students'
+import Analytics from './pages/admin/Analytics'
+import Alerts from './pages/admin/Alerts'
 
-const routes: Record<string, { page: Page; element: ReactNode }> = {
-  '/': { page: 'Dashboard', element: <Dashboard /> },
-  '/scanner': { page: 'Scanner', element: <Scanner /> },
-  '/users': { page: 'Users', element: <Users /> },
-  '/logs': { page: 'Logs', element: <Logs /> },
-  '/reports': { page: 'Reports', element: <Reports /> },
+function Protected({ children, loginTo }: { children: React.ReactNode; loginTo: string }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="grid min-h-screen place-items-center text-slate-400">Loading...</div>
+  if (!user) return <Navigate to={loginTo} replace />
+  return <>{children}</>
 }
 
-function App() {
+function StudentRoutes() {
   return (
-    <DemoProvider>
-      <AppShell />
-      <ToastContainer />
-    </DemoProvider>
+    <AuthProvider role="student">
+      <Routes>
+        <Route path="login" element={<StudentLogin />} />
+        <Route path="register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <Protected loginTo="/student/login">
+              <StudentLayout />
+            </Protected>
+          }
+        >
+          <Route index element={<StudentDashboard />} />
+          <Route path="qr" element={<MyQr />} />
+          <Route path="history" element={<History />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/student" replace />} />
+      </Routes>
+    </AuthProvider>
   )
 }
 
-function AppShell() {
-  const [currentPath, setCurrentPath] = useState('/')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const { pushToast } = useDemo()
-
-  const currentRoute = useMemo(() => routes[currentPath] ?? routes['/'], [currentPath])
-
-  const navigate = (path: string) => {
-    setCurrentPath(navItems.some((item) => item.path === path) ? path : '/')
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <Login
-        onLogin={() => {
-          setIsAuthenticated(true)
-          pushToast({
-            title: 'Demo session started',
-            message: 'Operator logged in. Dashboard is ready for the presentation flow.',
-            tone: 'success',
-          })
-        }}
-      />
-    )
-  }
-
+function AdminRoutes() {
   return (
-    <MainLayout activePage={currentRoute.page} onNavigate={navigate}>
-      {currentRoute.element}
-    </MainLayout>
+    <AuthProvider role="admin">
+      <SocketProvider>
+        <Routes>
+          <Route path="login" element={<AdminLogin />} />
+          <Route
+            path="/"
+            element={
+              <Protected loginTo="/admin/login">
+                <AdminLayout />
+              </Protected>
+            }
+          >
+            <Route index element={<Scanner />} />
+            <Route path="logs" element={<AdminLogs />} />
+            <Route path="students" element={<Students />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="alerts" element={<Alerts />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Routes>
+      </SocketProvider>
+    </AuthProvider>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/student/*" element={<StudentRoutes />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
